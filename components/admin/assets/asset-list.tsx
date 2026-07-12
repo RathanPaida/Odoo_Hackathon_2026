@@ -17,12 +17,21 @@ export function AssetList() {
   const [assetTag, setAssetTag] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
+  const [isBookable, setIsBookable] = useState(false);
+  const [holderId, setHolderId] = useState("");
+  const [users, setUsers] = useState<any[]>([]);
+
+  // Allocate Modal
+  const [showAllocate, setShowAllocate] = useState<any | null>(null);
+  const [allocateHolderId, setAllocateHolderId] = useState("");
+  
   
   const { toast } = useToast();
 
   useEffect(() => {
     loadAssets();
     loadCategories();
+    loadUsers();
   }, []);
 
   async function loadAssets() {
@@ -46,18 +55,29 @@ export function AssetList() {
     }
   }
 
+  async function loadUsers() {
+    try {
+      const res = await apiFetch<any>("/api/admin/users?pageSize=100");
+      if (res.ok && res.data?.data) setUsers(res.data.data);
+    } catch {
+      // ignore
+    }
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     try {
       const res = await apiFetch("/api/admin/assets", {
         method: "POST",
-        body: JSON.stringify({ name, assetTag, categoryId }),
+        body: JSON.stringify({ name, assetTag, categoryId, isBookable, holderId: holderId || null }),
       });
       if (res.ok) {
         toast("Asset created!", "success");
         setShowCreate(false);
         setName("");
         setAssetTag("");
+        setHolderId("");
+        setIsBookable(false);
         loadAssets();
       }
     } catch (e: any) {
@@ -66,6 +86,23 @@ export function AssetList() {
   }
 
   if (loading) return <div className="text-slate-500">Loading assets...</div>;
+
+  async function handleAllocate(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const res = await apiFetch(`/api/admin/assets/${showAllocate.id}/allocate`, {
+        method: "POST",
+        body: JSON.stringify({ holderId: allocateHolderId || null }),
+      });
+      if (res.ok) {
+        toast("Asset allocated!", "success");
+        setShowAllocate(null);
+        loadAssets();
+      }
+    } catch (e: any) {
+      toast(e.message, "error");
+    }
+  }
 
   return (
     <div>
@@ -99,6 +136,12 @@ export function AssetList() {
                   </span>
                 </td>
                 <td className="p-3 text-right space-x-2">
+                  <button onClick={() => {
+                    setShowAllocate(a);
+                    setAllocateHolderId(a.holder?.id || "");
+                  }} className="text-brand-600 text-xs font-medium hover:underline">
+                    Allocate
+                  </button>
                   <button onClick={() => setShowQr(a)} className="text-brand-600 text-xs font-medium hover:underline">
                     View QR
                   </button>
@@ -136,9 +179,46 @@ export function AssetList() {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="label">Assign to Employee</label>
+                <select className="input" value={holderId} onChange={(e) => setHolderId(e.target.value)}>
+                  <option value="">Leave unassigned</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" checked={isBookable} onChange={(e) => setIsBookable(e.target.checked)} className="rounded" />
+                Bookable resource
+              </label>
               <div className="mt-6 flex justify-end gap-3">
                 <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary">Cancel</button>
                 <button type="submit" className="btn-primary">Register</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAllocate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
+            <h3 className="text-lg font-bold mb-4">Allocate Asset</h3>
+            <p className="text-sm text-slate-500 mb-4">Assigning {showAllocate.name} ({showAllocate.assetTag})</p>
+            <form onSubmit={handleAllocate} className="space-y-4">
+              <div>
+                <label className="label">Assign to Employee</label>
+                <select className="input" value={allocateHolderId} onChange={(e) => setAllocateHolderId(e.target.value)}>
+                  <option value="">Unassigned</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowAllocate(null)} className="btn-secondary">Cancel</button>
+                <button type="submit" className="btn-primary">Save Allocation</button>
               </div>
             </form>
           </div>

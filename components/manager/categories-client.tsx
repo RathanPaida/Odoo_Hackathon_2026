@@ -30,7 +30,7 @@ export function CategoriesClient() {
       const res = await apiFetch<{ data: Paginated<CategoryDto> }>(
         `/api/manager/categories?${params}`
       );
-      setData(res.data.data);
+      setData(res.data?.data?.data || []);
     } catch (e: any) {
       toast(e.message ?? "Failed to load categories", "error");
     } finally {

@@ -41,7 +41,7 @@ export function MaintenanceClient() {
       const res = await apiFetch<{ data: Paginated<MaintenanceRequestDto> }>(
         `/api/employee/maintenance?page=${page}&pageSize=10`
       );
-      setData(res.data.data);
+      setData(res.data?.data?.data || []);
     } catch (e: any) {
       toast(e.message ?? "Failed to load requests", "error");
     } finally {

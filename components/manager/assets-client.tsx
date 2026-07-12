@@ -46,11 +46,17 @@ export function AssetsClient() {
     location: "",
     condition: "NEW",
     isBookable: false,
+    holderId: "",
   });
   const [busy, setBusy] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     []
   );
+  const [users, setUsers] = useState<{ id: string; firstName: string; lastName: string; email: string }[]>([]);
+
+  // Allocate Modal
+  const [showAllocate, setShowAllocate] = useState<ManagerAssetDetailsDto | null>(null);
+  const [allocateHolderId, setAllocateHolderId] = useState("");
 
   async function load() {
     setLoading(true);
@@ -67,7 +73,7 @@ export function AssetsClient() {
       const res = await apiFetch<{ data: Paginated<ManagerAssetDto> }>(
         `/api/manager/assets?${params}`
       );
-      setData(res.data.data);
+      setData(res.data?.data?.data || []);
     } catch (e: any) {
       toast(e.message ?? "Failed to load assets", "error");
     } finally {
@@ -86,6 +92,17 @@ export function AssetsClient() {
     }
   }
 
+  async function loadUsers() {
+    try {
+      const res = await apiFetch<{ data: { data: any[] } }>(
+        "/api/manager/employees?pageSize=100"
+      );
+      setUsers(res.data.data.data ?? []);
+    } catch {
+      // ignore
+    }
+  }
+
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -93,6 +110,7 @@ export function AssetsClient() {
 
   useEffect(() => {
     loadCategories();
+    loadUsers();
   }, []);
 
   async function openDetail(id: string) {
@@ -125,11 +143,12 @@ export function AssetsClient() {
           location: form.location || null,
           condition: form.condition,
           isBookable: form.isBookable,
+          holderId: form.holderId || null,
         }),
       });
       toast("Asset created.", "success");
       setCreateOpen(false);
-      setForm({ name: "", assetTag: "", serialNumber: "", categoryId: "", location: "", condition: "NEW", isBookable: false });
+      setForm({ name: "", assetTag: "", serialNumber: "", categoryId: "", location: "", condition: "NEW", isBookable: false, holderId: "" });
       load();
     } catch (e: any) {
       toast(e.message ?? "Failed to create asset", "error");
@@ -148,6 +167,27 @@ export function AssetsClient() {
       toast(e.message ?? "Failed", "error");
     } finally {
       setDeleteId(null);
+    }
+  }
+
+  async function handleAllocate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!showAllocate) return;
+    try {
+      const res = await apiFetch(`/api/manager/assets/${showAllocate.id}/allocate`, {
+        method: "POST",
+        body: JSON.stringify({ holderId: allocateHolderId || null }),
+      });
+      if (res.ok) {
+        toast("Asset allocated!", "success");
+        setShowAllocate(null);
+        if (detailId === showAllocate.id) {
+          openDetail(detailId);
+        }
+        load();
+      }
+    } catch (e: any) {
+      toast(e.message ?? "Failed to allocate", "error");
     }
   }
 
@@ -283,6 +323,15 @@ export function AssetsClient() {
             <input className="input" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Office / floor" />
           </div>
           <div>
+            <label className="label">Assign to Employee</label>
+            <select className="input" value={form.holderId} onChange={(e) => setForm({ ...form, holderId: e.target.value })}>
+              <option value="">Leave unassigned</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="label">Condition</label>
             <select className="input" value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}>
               {Object.entries(ASSET_CONDITION_LABEL).map(([k, v]) => (
@@ -319,6 +368,18 @@ export function AssetsClient() {
                   <ConditionBadge condition={detail.condition} />
                 </div>
               </div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-b pb-4">
+              <button 
+                className="btn-secondary text-xs py-1 px-3"
+                onClick={() => {
+                  setShowAllocate(detail);
+                  setAllocateHolderId(detail.holderId || "");
+                }}
+              >
+                Re-allocate
+              </button>
             </div>
 
             <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -361,6 +422,32 @@ export function AssetsClient() {
           </div>
         )}
       </Drawer>
+
+      <Modal
+        open={showAllocate !== null}
+        onClose={() => setShowAllocate(null)}
+        title="Allocate Asset"
+        footer={null}
+      >
+        {showAllocate && (
+          <form onSubmit={handleAllocate} className="space-y-4 pt-2">
+            <p className="text-sm text-slate-500 mb-4">Assigning {showAllocate.name} ({showAllocate.assetTag})</p>
+            <div>
+              <label className="label">Assign to Employee</label>
+              <select className="input" value={allocateHolderId} onChange={(e) => setAllocateHolderId(e.target.value)}>
+                <option value="">Unassigned</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setShowAllocate(null)} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">Save Allocation</button>
+            </div>
+          </form>
+        )}
+      </Modal>
 
       <ConfirmDialog
         open={deleteId !== null}

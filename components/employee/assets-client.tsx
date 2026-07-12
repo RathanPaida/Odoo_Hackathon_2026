@@ -46,7 +46,7 @@ export function AssetsClient() {
       const res = await apiFetch<{ data: Paginated<AssetAllocationDto> }>(
         `/api/employee/assets?${params}`
       );
-      setData(res.data.data);
+      setData(res.data?.data?.data || []);
     } catch (e: any) {
       toast(e.message ?? "Failed to load assets", "error");
     } finally {

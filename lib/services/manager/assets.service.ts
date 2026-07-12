@@ -79,6 +79,19 @@ export async function createAsset(
     isBookable: input.isBookable,
   });
 
+  if (input.holderId) {
+    await import("@/lib/db").then(({ prisma }) => 
+      prisma.assetAllocation.create({
+        data: {
+          assetId: created.id,
+          userId: input.holderId as string,
+          allocatedById: userId,
+          isActive: true,
+        }
+      })
+    );
+  }
+
   await feed.logManagerAction({
     userId,
     action: "ASSET_CREATED",
@@ -121,6 +134,27 @@ export async function updateAsset(
   const updated = await repo.updateAsset(id, data);
   if (!updated) throw new AssetError("Asset not found", "NOT_FOUND");
 
+  if (input.holderId !== undefined && input.holderId !== existing.holderId) {
+    const { prisma } = await import("@/lib/db");
+    await prisma.$transaction(async (tx) => {
+      // Deactivate old allocations
+      await tx.assetAllocation.updateMany({
+        where: { assetId: id, isActive: true },
+        data: { isActive: false, actualReturnDate: new Date() },
+      });
+      if (input.holderId) {
+        await tx.assetAllocation.create({
+          data: {
+            assetId: id,
+            userId: input.holderId as string,
+            allocatedById: userId,
+            isActive: true,
+          }
+        });
+      }
+    });
+  }
+
   await feed.logManagerAction({
     userId,
     action: "ASSET_UPDATED",
@@ -131,6 +165,55 @@ export async function updateAsset(
   });
 
   return updated;
+}
+
+export async function allocateAsset(
+  userId: string,
+  id: string,
+  holderId: string | null,
+  ipAddress?: string | null
+): Promise<ManagerAssetDto> {
+  const existing = await repo.getAssetByIdSimple(id);
+  if (!existing) throw new AssetError("Asset not found", "NOT_FOUND");
+
+  const { prisma } = await import("@/lib/db");
+  await prisma.$transaction(async (tx) => {
+    await tx.assetAllocation.updateMany({
+      where: { assetId: id, isActive: true },
+      data: { isActive: false, actualReturnDate: new Date() },
+    });
+    
+    await tx.asset.update({
+      where: { id },
+      data: { 
+        holderId,
+        status: holderId ? "ALLOCATED" : "AVAILABLE"
+      },
+    });
+    
+    if (holderId) {
+      await tx.assetAllocation.create({
+        data: {
+          assetId: id,
+          userId: holderId,
+          allocatedById: userId,
+          isActive: true,
+        }
+      });
+    }
+  });
+
+  await feed.logManagerAction({
+    userId,
+    action: "ASSET_ALLOCATED",
+    entityType: "Asset",
+    entityId: id,
+    details: { holderId },
+    ipAddress,
+  });
+
+  const updated = await repo.getAssetByIdSimple(id);
+  return updated!;
 }
 
 export async function deleteAsset(

@@ -45,7 +45,8 @@ export async function createAsset(data: {
   isBookable?: boolean;
   status?: string;
   departmentId?: string;
-}) {
+  holderId?: string;
+}, adminId?: string) {
   // Enforce unique asset tag manually to return clean error
   const existing = await db.asset.findUnique({
     where: { assetTag: data.assetTag },
@@ -54,19 +55,71 @@ export async function createAsset(data: {
     throw new Error("Asset tag must be unique.");
   }
 
-  const asset = await db.asset.create({
-    data: {
-      name: data.name,
-      assetTag: data.assetTag,
-      categoryId: data.categoryId,
-      serialNumber: data.serialNumber,
-      condition: data.condition || "NEW",
-      location: data.location,
-      isBookable: data.isBookable || false,
-      status: data.status || "AVAILABLE",
-      departmentId: data.departmentId,
-    },
+  const asset = await db.$transaction(async (tx) => {
+    const created = await tx.asset.create({
+      data: {
+        name: data.name,
+        assetTag: data.assetTag,
+        categoryId: data.categoryId,
+        serialNumber: data.serialNumber,
+        condition: data.condition || "NEW",
+        location: data.location,
+        isBookable: data.isBookable || false,
+        status: data.holderId ? "ALLOCATED" : (data.status || "AVAILABLE"),
+        departmentId: data.departmentId,
+        holderId: data.holderId || null,
+      },
+    });
+
+    if (data.holderId && adminId) {
+      await tx.assetAllocation.create({
+        data: {
+          assetId: created.id,
+          userId: data.holderId,
+          allocatedById: adminId,
+          isActive: true,
+        }
+      });
+    }
+
+    return created;
   });
 
   return asset;
+}
+
+export async function allocateAsset(assetId: string, holderId: string | null, adminId: string) {
+  const asset = await db.asset.findUnique({ where: { id: assetId } });
+  if (!asset) throw new Error("Asset not found");
+  
+  return await db.$transaction(async (tx) => {
+    // Deactivate old allocations
+    await tx.assetAllocation.updateMany({
+      where: { assetId, isActive: true },
+      data: { isActive: false, actualReturnDate: new Date() },
+    });
+    
+    // Update asset holder
+    const updated = await tx.asset.update({
+      where: { id: assetId },
+      data: { 
+        holderId,
+        status: holderId ? "ALLOCATED" : "AVAILABLE"
+      },
+    });
+    
+    // Create new allocation
+    if (holderId) {
+      await tx.assetAllocation.create({
+        data: {
+          assetId,
+          userId: holderId,
+          allocatedById: adminId,
+          isActive: true,
+        }
+      });
+    }
+    
+    return updated;
+  });
 }

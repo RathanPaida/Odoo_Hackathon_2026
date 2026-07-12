@@ -30,7 +30,7 @@ export function TransfersClient() {
       const res = await apiFetch<{ data: Paginated<TransferRequestDto> }>(
         `/api/employee/transfers?page=${page}&pageSize=10`
       );
-      setData(res.data.data);
+      setData(res.data?.data?.data || []);
     } catch (e: any) {
       toast(e.message ?? "Failed to load transfers", "error");
     } finally {
