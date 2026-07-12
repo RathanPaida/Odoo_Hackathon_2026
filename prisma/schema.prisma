@@ -1,0 +1,139 @@
+// prisma/schema.prisma
+// Complete data model for the authentication system.
+// Models: User, EmailVerification, PasswordReset, Session, RefreshToken
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ASSET_MANAGER
+  DEPARTMENT_HEAD
+  EMPLOYEE
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  firstName     String?
+  lastName      String?
+  role          UserRole       @default(EMPLOYEE)
+  status        AccountStatus @default(ACTIVE)
+  emailVerified Boolean        @default(false)
+  avatarUrl     String?
+  lastLoginAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime? // Soft delete
+
+  // ERP extensions
+  employeeId    String? // HR/employee reference (nullable for non-staff accounts)
+  departmentId  String? @map("department_id")
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
+  sessions           Session[]
+  refreshTokens      RefreshToken[]
+
+  @@index([status])
+  @@index([emailVerified])
+  @@index([departmentId])
+  @@index([employeeId])
+  @@map("users")
+}
+
+// Organizational units assets/resources belong to. Linked to users via
+// departmentId (a user's home department). A DEPARTMENT_HEAD manages one.
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@map("departments")
+}
+
+// Email-verification tokens (link or OTP). Single-use, expiring.
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  code      String? // OTP code (6 digits) when using OTP flow
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verifications")
+}
+
+// Password-reset tokens. Single-use, expiring.
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_resets")
+}
+
+// Server-side sessions (used for "remember me" / device tracking).
+model Session {
+  id            String   @id @default(cuid())
+  userId        String
+  refreshTokenId String // links to RefreshToken for invalidation
+  userAgent     String?
+  ipAddress     String?
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  revokedAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// Refresh tokens, stored hashed. Allows revocation / rotation.
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique // hashed raw token; never store raw
+  family    String // token family for rotation / reuse detection
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+  replacedBy String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([family])
+  @@map("refresh_tokens")
+}
