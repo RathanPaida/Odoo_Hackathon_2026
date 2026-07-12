@@ -15,7 +15,7 @@ const passwordSchema = z
   .regex(/[^A-Za-z0-9]/, "Must contain a special character");
 
 export const registerSchema = z.object({
-  email: z.string().email("Enter a valid email"),
+  email: z.string().email("Enter a valid email").toLowerCase().trim(),
   password: passwordSchema,
   firstName: z.string().min(1, "First name is required").max(50),
   lastName: z.string().min(1, "Last name is required").max(50),
@@ -24,7 +24,7 @@ export const registerSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const loginSchema = z.object({
-  email: z.string().email("Enter a valid email"),
+  email: z.string().email("Enter a valid email").toLowerCase().trim(),
   password: z.string().min(1, "Password is required"),
   remember: z.boolean().optional().default(false),
 });

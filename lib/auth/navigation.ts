@@ -29,9 +29,10 @@ const ROLE_NAV: Record<UserRole, NavItem[]> = {
     { href: ROLE_DASHBOARD.ASSET_MANAGER + "#transfers", label: "Transfers" },
   ],
   DEPARTMENT_HEAD: [
-    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD, label: "Department" },
-    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "#assets", label: "Dept Assets" },
-    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "#bookings", label: "Bookings" },
+    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD, label: "Overview" },
+    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "/assets", label: "Assets" },
+    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "/requests", label: "Requests" },
+    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "/booking", label: "Booking" },
   ],
   EMPLOYEE: [
     { href: ROLE_DASHBOARD.EMPLOYEE, label: "My Workspace" },

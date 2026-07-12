@@ -73,18 +73,22 @@ export async function loginUser(
   ctx: { userAgent?: string | null; ip?: string | null }
 ) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
-  // Generic message avoids user enumeration.
+  
   if (!user || user.deletedAt) {
+    console.log("LOGIN DEBUG: User not found or deleted", input.email, user);
     throw new AuthError("Invalid email or password.", 401);
   }
   const valid = await verifyPassword(input.password, user.passwordHash);
   if (!valid) {
+    console.log("LOGIN DEBUG: Password mismatch for", input.email);
     throw new AuthError("Invalid email or password.", 401);
   }
   if (user.status !== "ACTIVE") {
+    console.log("LOGIN DEBUG: Account inactive", input.email);
     throw new AuthError("Your account is inactive. Contact support.", 403);
   }
   if (!user.emailVerified) {
+    console.log("LOGIN DEBUG: Email not verified", input.email);
     throw new AuthError("Please verify your email before logging in.", 403);
   }
 
