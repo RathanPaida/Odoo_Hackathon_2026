@@ -1,0 +1,30 @@
+# docker-compose.yml
+# One-command local PostgreSQL for AssetFlow (oodoprep) development.
+# Usage:
+#   docker compose up -d            # start Postgres
+#   cp .env.example .env            # then set DATABASE_URL (see below)
+#   npm install
+#   npm run prisma:migrate
+#   npm run db:seed
+#   npm run dev
+services:
+  db:
+    image: postgres:16
+    container_name: oodoprep-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: oodoprep
+    ports:
+      - "5432:5432"
+    volumes:
+      - oodoprep-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d oodoprep"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  oodoprep-db-data:

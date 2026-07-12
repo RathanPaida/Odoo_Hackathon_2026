@@ -91,15 +91,19 @@ openssl rand -base64 32   # -> JWT_REFRESH_SECRET
 Fill in `DATABASE_URL` and email provider settings.
 
 ### 3. Start PostgreSQL
-**Local (Docker):**
+**Local (Docker Compose — recommended):**
 ```bash
-docker run --name oodoprep-db -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=oodoprep \
-  -p 5432:5432 -d postgres:16
+docker compose up -d      # starts Postgres on :5432 (see docker-compose.yml)
 ```
 Then set:
 ```
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/oodoprep?schema=public"
+```
+**Local (plain Docker):**
+```bash
+docker run --name oodoprep-db -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=oodoprep \
+  -p 5432:5432 -d postgres:16
 ```
 **Without Docker:** install PostgreSQL locally and create a database `oodoprep`, then point `DATABASE_URL` at it.
 
@@ -121,6 +125,33 @@ Default admin: `admin@oodoprep.com` / `Admin@123456` (override with
 ```bash
 npm run dev      # http://localhost:3000
 ```
+
+## Local Setup for Teammates (Fresh Clone)
+
+`.env` is gitignored and the database is **not** part of the repo, so a fresh
+clone has no database connection. A teammate must provision their own Postgres
+and apply the committed migrations:
+
+```bash
+# 1. Start Postgres (or use docker compose up -d)
+docker run --name oodoprep-db -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=oodoprep \
+  -p 5432:5432 -d postgres:16
+
+# 2. Environment
+cp .env.example .env
+#    set DATABASE_URL="postgresql://postgres:postgres@localhost:5432/oodoprep?schema=public"
+#    generate JWT_ACCESS_SECRET / JWT_REFRESH_SECRET (openssl rand -base64 32)
+
+# 3. Install, migrate, seed, run
+npm install
+npm run prisma:migrate     # rebuilds schema from prisma/migrations (no live DB needed)
+npm run db:seed            # creates admin@oodoprep.com / Admin@123456
+npm run dev
+```
+> Each clone connects to its **own** local database, so teammates' users are
+> separate from yours. For a shared team environment, point `DATABASE_URL` at a
+> hosted Postgres (Neon, Supabase, Railway, RDS) instead of `localhost`.
 
 ## Email Configuration
 - **SMTP:** set `EMAIL_PROVIDER=smtp` and `SMTP_HOST/PORT/USER/PASS`.
