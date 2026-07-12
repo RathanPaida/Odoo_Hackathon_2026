@@ -65,6 +65,7 @@ model User {
   // Notification & Activity
   notifications         Notification[]
   activityLogs          ActivityLog[]
+  returnRequests        ReturnRequest[]      @relation("ReturnRequestedBy")
 
   // Department head
   headedDepartment      Department?          @relation("DepartmentHead")
@@ -205,6 +206,7 @@ model Asset {
   maintenanceRequests MaintenanceRequest[]
   auditItems       AuditItem[]
   transferRequests TransferRequest[]
+  returnRequests   ReturnRequest[]
 
   @@index([status])
   @@index([categoryId])
@@ -268,7 +270,7 @@ model TransferRequest {
   fromDeptId    String?
   toDeptId      String?
   reason        String?
-  status        String         @default("REQUESTED")
+  status        String         @default("PENDING")
   reviewedById  String?
   reviewedAt    DateTime?
   createdAt     DateTime       @default(now())
@@ -420,4 +422,25 @@ model Notification {
   @@index([userId, read])
   @@index([createdAt])
   @@map("notifications")
+}
+
+model ReturnRequest {
+  id              String   @id @default(cuid())
+  assetId         String
+  requestedById   String
+  conditionNotes  String?
+  imageUrls       String?  // JSON string of string[] (urls)
+  status          String   @default("PENDING") // PENDING | APPROVED | REJECTED | CANCELLED
+  reviewedById    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  asset       Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  requestedBy User  @relation("ReturnRequestedBy", fields: [requestedById], references: [id])
+
+  @@index([assetId])
+  @@index([requestedById])
+  @@index([status])
+  @@map("return_requests")
 }

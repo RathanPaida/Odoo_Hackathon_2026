@@ -37,10 +37,6 @@ export function EmployeePromoteDialog({
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        throw new Error(response.message || "Failed to update role");
-      }
-
       onSuccess();
     } catch (err: any) {
       setError(err.message);

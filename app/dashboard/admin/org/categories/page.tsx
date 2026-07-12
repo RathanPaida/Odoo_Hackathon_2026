@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function CategoriesPage() {
   return (
-    <AppShell active="/dashboard/admin">
+    <AppShell active="/dashboard/admin/org/departments">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Organization Setup</h1>

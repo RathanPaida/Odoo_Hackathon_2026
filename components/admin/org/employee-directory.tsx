@@ -12,7 +12,7 @@ export function EmployeeDirectory() {
   const loadEmployees = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch<any[]>("/api/admin/employees");
+      const res = await apiFetch<any>("/api/admin/employees");
       if (res.ok && res.data?.data) {
         setEmployees(res.data.data);
       }

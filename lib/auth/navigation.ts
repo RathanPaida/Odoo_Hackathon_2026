@@ -18,25 +18,34 @@ const COMMON: NavItem[] = [
 // Role-specific primary navigation (the role dashboard + extras).
 const ROLE_NAV: Record<UserRole, NavItem[]> = {
   ADMIN: [
-    { href: ROLE_DASHBOARD.ADMIN, label: "Admin Console" },
-    { href: ROLE_DASHBOARD.ADMIN + "#departments", label: "Departments" },
-    { href: ROLE_DASHBOARD.ADMIN + "#employees", label: "Employees" },
-    { href: ROLE_DASHBOARD.ADMIN + "#audit", label: "Audit Cycles" },
+    { href: ROLE_DASHBOARD.ADMIN, label: "Dashboard" },
+    { href: ROLE_DASHBOARD.ADMIN + "/org/departments", label: "Organization" },
+    { href: ROLE_DASHBOARD.ADMIN + "/assets", label: "Assets" },
+    { href: ROLE_DASHBOARD.ADMIN + "/transfers", label: "Transfers" },
+    { href: ROLE_DASHBOARD.ADMIN + "/maintenance", label: "Maintenance" },
+    { href: ROLE_DASHBOARD.ADMIN + "/audits", label: "Audits" },
   ],
   ASSET_MANAGER: [
     { href: ROLE_DASHBOARD.ASSET_MANAGER, label: "Asset Manager" },
-    { href: ROLE_DASHBOARD.ASSET_MANAGER + "#assets", label: "Assets" },
-    { href: ROLE_DASHBOARD.ASSET_MANAGER + "#transfers", label: "Transfers" },
+    { href: ROLE_DASHBOARD.ASSET_MANAGER + "/assets", label: "Assets" },
+    { href: ROLE_DASHBOARD.ASSET_MANAGER + "/transfers", label: "Transfers" },
+    { href: ROLE_DASHBOARD.ASSET_MANAGER + "/maintenance", label: "Maintenance" },
   ],
   DEPARTMENT_HEAD: [
     { href: ROLE_DASHBOARD.DEPARTMENT_HEAD, label: "Department" },
-    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "#assets", label: "Dept Assets" },
-    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "#bookings", label: "Bookings" },
+    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "/assets", label: "Dept Assets" },
+    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "/bookings", label: "Bookings" },
+    { href: ROLE_DASHBOARD.DEPARTMENT_HEAD + "/transfers", label: "Transfers" },
   ],
   EMPLOYEE: [
-    { href: ROLE_DASHBOARD.EMPLOYEE, label: "My Workspace" },
-    { href: ROLE_DASHBOARD.EMPLOYEE + "#assets", label: "My Assets" },
-    { href: ROLE_DASHBOARD.EMPLOYEE + "#requests", label: "My Requests" },
+    { href: ROLE_DASHBOARD.EMPLOYEE, label: "Dashboard" },
+    { href: ROLE_DASHBOARD.EMPLOYEE + "/assets", label: "My Assets" },
+    { href: ROLE_DASHBOARD.EMPLOYEE + "/transfers", label: "Transfers" },
+    { href: ROLE_DASHBOARD.EMPLOYEE + "/returns", label: "Returns" },
+    { href: ROLE_DASHBOARD.EMPLOYEE + "/maintenance", label: "Maintenance" },
+    { href: ROLE_DASHBOARD.EMPLOYEE + "/bookings", label: "Bookings" },
+    { href: ROLE_DASHBOARD.EMPLOYEE + "/notifications", label: "Notifications" },
+    { href: ROLE_DASHBOARD.EMPLOYEE + "/activity", label: "Activity" },
   ],
 };
 

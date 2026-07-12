@@ -13,7 +13,7 @@ export function DepartmentList() {
   const loadDepartments = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch<any[]>("/api/admin/departments");
+      const res = await apiFetch<any>("/api/admin/departments");
       if (res.ok && res.data?.data) {
         setDepartments(res.data.data);
       }
@@ -42,7 +42,9 @@ export function DepartmentList() {
     if (!confirm("Are you sure you want to deactivate this department?")) return;
     try {
       const res = await apiFetch(`/api/admin/departments/${id}`, { method: "DELETE" });
-      if (res.ok) loadDepartments();
+      if (res.ok) {
+        loadDepartments();
+      }
     } catch (e) {
       alert("Failed to delete department");
     }

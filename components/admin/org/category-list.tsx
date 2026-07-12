@@ -13,7 +13,7 @@ export function CategoryList() {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch<any[]>("/api/admin/categories");
+      const res = await apiFetch<any>("/api/admin/categories");
       if (res.ok && res.data?.data) {
         setCategories(res.data.data);
       }
@@ -44,8 +44,6 @@ export function CategoryList() {
       const res = await apiFetch(`/api/admin/categories/${id}`, { method: "DELETE" });
       if (res.ok) {
         loadCategories();
-      } else {
-        alert(res.message);
       }
     } catch (e) {
       alert("Failed to delete category");

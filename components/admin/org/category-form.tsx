@@ -41,9 +41,7 @@ export function CategoryForm({
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        throw new Error(response.message || "Failed to save category");
-      }
+
 
       onSuccess();
     } catch (err: any) {
