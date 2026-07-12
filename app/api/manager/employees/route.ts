@@ -1,0 +1,28 @@
+// app/api/manager/employees/route.ts
+// GET — list employees (for dropdowns)
+import { NextRequest } from "next/server";
+import { requireRole } from "@/lib/auth/guard";
+import { jsonResponse } from "@/lib/request";
+import { managerEmployeeQuerySchema } from "@/validations/manager";
+import * as employeeService from "@/lib/services/manager/employees.service";
+
+export async function GET(req: NextRequest) {
+  const guard = await requireRole("ASSET_MANAGER", "ADMIN");
+  if (guard.response) return guard.response;
+
+  const sp = req.nextUrl.searchParams;
+  const parsed = managerEmployeeQuerySchema.safeParse({
+    q: sp.get("q") ?? undefined,
+    page: sp.get("page") ?? undefined,
+    pageSize: sp.get("pageSize") ?? undefined,
+  });
+  if (!parsed.success) {
+    return jsonResponse(
+      { ok: false, message: "Invalid query", errors: parsed.error.flatten().fieldErrors },
+      422
+    );
+  }
+
+  const data = await employeeService.listEmployees(parsed.data);
+  return jsonResponse({ ok: true, data });
+}
