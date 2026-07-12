@@ -73,7 +73,7 @@ export function AssetsClient() {
       const res = await apiFetch<{ data: Paginated<ManagerAssetDto> }>(
         `/api/manager/assets?${params}`
       );
-      setData(res.data?.data?.data || []);
+      setData(res.data.data);
     } catch (e: any) {
       toast(e.message ?? "Failed to load assets", "error");
     } finally {

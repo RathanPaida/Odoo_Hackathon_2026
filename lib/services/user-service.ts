@@ -9,8 +9,8 @@ type UserRecord = {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  role: "ADMIN" | "ASSET_MANAGER" | "DEPARTMENT_HEAD" | "EMPLOYEE";
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+  role: string;
+  status: string;
   emailVerified: boolean;
   avatarUrl: string | null;
   lastLoginAt: Date | null;
@@ -26,8 +26,8 @@ export function toPublicUser(u: UserRecord): PublicUser {
     email: u.email,
     firstName: u.firstName,
     lastName: u.lastName,
-    role: u.role,
-    status: u.status,
+    role: u.role as PublicUser["role"],
+    status: u.status as PublicUser["status"],
     emailVerified: u.emailVerified,
     avatarUrl: u.avatarUrl,
     lastLoginAt: u.lastLoginAt ? u.lastLoginAt.toISOString() : null,
