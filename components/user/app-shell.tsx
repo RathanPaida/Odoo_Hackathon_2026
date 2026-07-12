@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { toPublicUser } from "@/lib/services/user-service";
 import type { PublicUser } from "@/types";
 import { LogoutButton } from "@/components/user/logout-button";
+import { NotificationBell } from "@/components/user/notification-bell";
 import { initials } from "@/lib/utils";
 import { getRoleNav } from "@/lib/auth/navigation";
 import { ROLE_LABELS, dashboardForRole } from "@/lib/auth/roles";
@@ -49,17 +50,20 @@ export async function AppShell({
             </nav>
           </div>
           <div className="ml-6 flex items-center gap-4 shrink-0 pl-4 border-l border-slate-200">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold text-slate-800 leading-none">
-                {pu ? `${pu.firstName ?? ""} ${pu.lastName ?? ""}`.trim() || pu.email : ""}
-              </p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-brand-600 mt-1">
-                {ROLE_LABELS[role]}
-              </p>
-            </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700 shadow-sm border border-brand-200">
-              {pu ? initials(pu.firstName, pu.lastName) : "?"}
-            </div>
+            <Link href="/profile" className="flex items-center gap-3">
+              <div className="hidden text-right sm:block">
+                <p className="text-sm font-semibold text-slate-800 leading-none">
+                  {pu ? `${pu.firstName ?? ""} ${pu.lastName ?? ""}`.trim() || pu.email : ""}
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-600 mt-1">
+                  {ROLE_LABELS[role]}
+                </p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700 shadow-sm border border-brand-200">
+                {pu ? initials(pu.firstName, pu.lastName) : "?"}
+              </div>
+            </Link>
+            <NotificationBell />
             <LogoutButton />
           </div>
         </div>

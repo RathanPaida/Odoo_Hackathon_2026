@@ -115,7 +115,10 @@ export default async function EmployeeDashboardPage() {
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="card">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">My Assets</h2>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">My Assets</h2>
+              <Link href="/dashboard/employee/assets" className="text-xs font-medium text-brand-600 hover:underline">View all</Link>
+            </div>
             {assets.data.length === 0 ? (
               <p className="text-sm text-slate-400">No assets allocated yet.</p>
             ) : (

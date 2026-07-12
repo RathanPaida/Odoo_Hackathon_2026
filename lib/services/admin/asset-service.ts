@@ -92,7 +92,7 @@ export async function allocateAsset(assetId: string, holderId: string | null, ad
   const asset = await db.asset.findUnique({ where: { id: assetId } });
   if (!asset) throw new Error("Asset not found");
   
-  return await db.$transaction(async (tx) => {
+  const result = await db.$transaction(async (tx) => {
     // Deactivate old allocations
     await tx.assetAllocation.updateMany({
       where: { assetId, isActive: true },
@@ -118,8 +118,32 @@ export async function allocateAsset(assetId: string, holderId: string | null, ad
           isActive: true,
         }
       });
+
+      // Create notification for the employee
+      await tx.notification.create({
+        data: {
+          userId: holderId,
+          type: "ASSET_ASSIGNED",
+          title: "Asset Assigned",
+          message: `You have been assigned "${asset.name}" (${asset.assetTag}).`,
+          link: "/dashboard/employee/assets",
+        },
+      });
+
+      // Log activity
+      await tx.activityLog.create({
+        data: {
+          userId: adminId,
+          action: "ASSET_ALLOCATED",
+          entityType: "Asset",
+          entityId: assetId,
+          details: JSON.stringify({ assetName: asset.name, holderId }),
+        },
+      });
     }
     
     return updated;
   });
+
+  return result;
 }

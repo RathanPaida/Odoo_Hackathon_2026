@@ -30,7 +30,7 @@ export function ReturnsClient() {
       const res = await apiFetch<{ data: Paginated<ManagerReturnDto> }>(
         `/api/manager/returns?${params}`
       );
-      setData(res.data?.data?.data || []);
+      setData(res.data?.data || null);
     } catch (e: any) {
       toast(e.message ?? "Failed to load returns", "error");
     } finally {
