@@ -31,7 +31,7 @@ export function ActivityClient() {
       const res = await apiFetch<{ data: Paginated<ActivityItemDto> }>(
         `/api/employee/activity?${params}`
       );
-      setData(res.data?.data || null);
+      setData(res.data?.data as any || null);
     } catch (e: any) {
       toast(e.message ?? "Failed to load activity", "error");
     } finally {

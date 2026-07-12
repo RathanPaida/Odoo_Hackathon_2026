@@ -30,7 +30,7 @@ export function BookingsClient() {
       const res = await apiFetch<{ data: Paginated<ManagerBookingDto> }>(
         `/api/manager/bookings?${params}`
       );
-      setData(res.data?.data || null);
+      setData(res.data?.data as any || null);
     } catch (e: any) {
       toast(e.message ?? "Failed to load bookings", "error");
     } finally {

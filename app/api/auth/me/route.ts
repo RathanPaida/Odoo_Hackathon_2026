@@ -21,7 +21,7 @@ export async function GET() {
   const payload = await getAccessTokenPayload();
   if (payload?.sub) {
     const user = await getCurrentUser();
-    if (user) return jsonResponse({ ok: true, data: toPublicUser(user) });
+    if (user) return jsonResponse({ ok: true, data: toPublicUser(user as any) });
   }
 
   // Access token missing/expired → try silent refresh via refresh cookie.
@@ -45,7 +45,7 @@ export async function GET() {
         maxAge: REFRESH_MAX,
       });
       const user = await getCurrentUser();
-      if (user) return jsonResponse({ ok: true, data: toPublicUser(user) });
+      if (user) return jsonResponse({ ok: true, data: toPublicUser(user as any) });
     }
   }
 
