@@ -23,46 +23,48 @@ export async function AppShell({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      <header className="border-b border-slate-200 bg-white sticky top-0 z-40">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
           <Link
             href={dashboardForRole(role)}
-            className="text-lg font-bold text-brand-600"
+            className="text-xl font-extrabold tracking-tight text-brand-600 mr-8"
           >
             AssetFlow
           </Link>
-          <nav className="flex items-center gap-1">
-            {NAV.map((n) => (
-              <Link
-                key={n.href}
-                href={n.href}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                  active === n.href
-                    ? "bg-brand-50 text-brand-700"
-                    : "text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                {n.label}
-              </Link>
-            ))}
-            <div className="ml-3 flex items-center gap-3">
-              <div className="hidden text-right sm:block">
-                <p className="text-xs font-medium text-slate-700">
-                  {pu ? `${pu.firstName ?? ""} ${pu.lastName ?? ""}`.trim() || pu.email : ""}
-                </p>
-                <p className="text-[10px] uppercase tracking-wide text-slate-400">
-                  {ROLE_LABELS[role]}
-                </p>
-              </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
-                {pu ? initials(pu.firstName, pu.lastName) : "?"}
-              </div>
-              <LogoutButton />
+          <div className="flex-1 overflow-x-auto whitespace-nowrap no-scrollbar pb-1 sm:pb-0">
+            <nav className="flex items-center gap-2">
+              {NAV.map((n) => (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    active === n.href
+                      ? "bg-brand-50 text-brand-700"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {n.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+          <div className="ml-6 flex items-center gap-4 shrink-0 pl-4 border-l border-slate-200">
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-semibold text-slate-800 leading-none">
+                {pu ? `${pu.firstName ?? ""} ${pu.lastName ?? ""}`.trim() || pu.email : ""}
+              </p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-brand-600 mt-1">
+                {ROLE_LABELS[role]}
+              </p>
             </div>
-          </nav>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700 shadow-sm border border-brand-200">
+              {pu ? initials(pu.firstName, pu.lastName) : "?"}
+            </div>
+            <LogoutButton />
+          </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">{children}</main>
     </div>
   );
 }

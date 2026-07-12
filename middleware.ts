@@ -142,5 +142,7 @@ export const config = {
     "/login/:path*",
     "/register/:path*",
     "/api/user/:path*",
+    "/api/employee/:path*",
+    "/api/admin/:path*",
   ],
 };
