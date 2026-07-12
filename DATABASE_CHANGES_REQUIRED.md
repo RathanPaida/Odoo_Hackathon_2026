@@ -85,3 +85,32 @@ returnRequests ReturnRequest[] @relation("ReturnRequestedBy")
 No seed changes required for the Employee Module. Managers/Admins (built by other
 developers) are expected to allocate assets and create bookable resources; the
 Employee Module only reads/creates records scoped to the logged-in employee.
+
+---
+
+## 5. Asset Manager Module — Database Notes (Developer 2)
+
+The Asset Manager module reuses **all existing Prisma models** and does NOT
+require any additional database changes. Models used:
+
+- `Asset` — full CRUD (create, update, soft-delete)
+- `AssetCategory` — full CRUD
+- `AssetAllocation` — create on transfer approval, deactivate on return approval
+- `AssetHistory` — write audit entries on asset lifecycle events
+- `TransferRequest` — list all, review (approve/reject), updates allocation
+- `MaintenanceRequest` — list all, review (approve/reject/assign/resolve)
+- `ResourceBooking` — list all, cancel
+- `User` — employee lookup for dropdowns
+- `Department` — referenced via asset/employee relations
+- `ActivityLog` — audit logging for all manager actions
+- `Notification` — sent to employees on transfer/return/maintenance reviews
+
+### ReturnRequest dependency
+
+The Asset Manager return review flow (`lib/repositories/manager/returns.repository.ts`)
+uses `prisma.returnRequest` — this model is defined in Section 1 above and must
+be merged first. Without it, the return review feature will not compile.
+
+### No additional migrations needed
+
+All other models already exist in `prisma/schema.prisma`.
