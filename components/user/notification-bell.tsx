@@ -13,7 +13,7 @@ export function NotificationBell() {
         const res = await apiFetch<{ count: number }>(
           "/api/employee/notifications/unread-count"
         );
-        if (active && res.data?.data?.count != null) setCount(res.data.data.count);
+        if (active && res.data?.count != null) setCount(res.data.count);
       } catch {
         // silent
       }
