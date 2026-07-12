@@ -31,7 +31,7 @@ export function ReturnsClient() {
       const res = await apiFetch<{ data: Paginated<ReturnRequestDto> }>(
         `/api/employee/returns?page=${page}&pageSize=10`
       );
-      setData(res.data.data);
+      setData(res.data?.data || null);
     } catch (e: any) {
       toast(e.message ?? "Failed to load returns", "error");
     } finally {

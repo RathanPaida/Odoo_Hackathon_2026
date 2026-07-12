@@ -143,6 +143,7 @@ export const config = {
     "/register/:path*",
     "/api/user/:path*",
     "/api/employee/:path*",
+    "/api/manager/:path*",
     "/api/admin/:path*",
   ],
 };

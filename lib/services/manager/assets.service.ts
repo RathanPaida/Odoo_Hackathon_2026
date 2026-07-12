@@ -177,6 +177,10 @@ export async function allocateAsset(
   if (!existing) throw new AssetError("Asset not found", "NOT_FOUND");
 
   const { prisma } = await import("@/lib/db");
+
+  const assetName = existing.name;
+  const assetTag = existing.assetTag;
+
   await prisma.$transaction(async (tx) => {
     await tx.assetAllocation.updateMany({
       where: { assetId: id, isActive: true },
@@ -199,6 +203,17 @@ export async function allocateAsset(
           allocatedById: userId,
           isActive: true,
         }
+      });
+
+      // Create notification for the employee
+      await tx.notification.create({
+        data: {
+          userId: holderId,
+          type: "ASSET_ASSIGNED",
+          title: "Asset Assigned",
+          message: `You have been assigned "${assetName}" (${assetTag}).`,
+          link: "/dashboard/employee/assets",
+        },
       });
     }
   });
