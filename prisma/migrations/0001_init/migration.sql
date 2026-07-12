@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN');
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'EMPLOYEE');
 
 -- CreateEnum
 CREATE TYPE "AccountStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'SUSPENDED');
@@ -11,7 +11,7 @@ CREATE TABLE "users" (
     "passwordHash" TEXT NOT NULL,
     "firstName" TEXT,
     "lastName" TEXT,
-    "role" "UserRole" NOT NULL DEFAULT 'USER',
+    "role" "UserRole" NOT NULL DEFAULT 'EMPLOYEE',
     "status" "AccountStatus" NOT NULL DEFAULT 'ACTIVE',
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "avatarUrl" TEXT,
@@ -19,8 +19,22 @@ CREATE TABLE "users" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
+    "employeeId" TEXT,
+    "department_id" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "departments" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "departments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -86,6 +100,15 @@ CREATE INDEX "users_status_idx" ON "users"("status");
 CREATE INDEX "users_emailVerified_idx" ON "users"("emailVerified");
 
 -- CreateIndex
+CREATE INDEX "users_department_id_idx" ON "users"("department_id");
+
+-- CreateIndex
+CREATE INDEX "users_employeeId_idx" ON "users"("employeeId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "departments_code_key" ON "departments"("code");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "email_verifications_token_key" ON "email_verifications"("token");
 
 -- CreateIndex
@@ -113,6 +136,9 @@ CREATE INDEX "refresh_tokens_userId_idx" ON "refresh_tokens"("userId");
 CREATE INDEX "refresh_tokens_family_idx" ON "refresh_tokens"("family");
 
 -- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "departments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "email_verifications" ADD CONSTRAINT "email_verifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -123,4 +149,3 @@ ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
