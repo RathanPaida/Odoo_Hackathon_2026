@@ -47,6 +47,13 @@ export const createMaintenanceSchema = z.object({
 });
 export type CreateMaintenanceInput = z.infer<typeof createMaintenanceSchema>;
 
+// Employee may refine their reported issue / add a photo to their own request.
+export const updateMaintenanceSchema = z.object({
+  issueDescription: z.string().trim().max(1000).optional().nullable(),
+  photoUrl: z.string().url().optional().nullable(),
+});
+export type UpdateMaintenanceInput = z.infer<typeof updateMaintenanceSchema>;
+
 // ----- Booking -----
 export const createBookingSchema = z
   .object({
