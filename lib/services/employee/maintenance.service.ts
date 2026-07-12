@@ -2,7 +2,7 @@
 import * as repo from "@/lib/repositories/employee/maintenance.repository";
 import * as assetRepo from "@/lib/repositories/employee/assets.repository";
 import { logEmployeeAction } from "@/lib/repositories/employee/feed.repository";
-import type { CreateMaintenanceInput } from "@/validations/employee";
+import type { CreateMaintenanceInput, UpdateMaintenanceInput } from "@/validations/employee";
 import type { MaintenanceRequestDto, Paginated } from "@/types/employee";
 
 export class MaintenanceError extends Error {
@@ -60,4 +60,14 @@ export async function getMaintenance(
   id: string
 ): Promise<MaintenanceRequestDto | null> {
   return repo.getMaintenanceById(id, userId);
+}
+
+export async function updateMaintenance(
+  userId: string,
+  id: string,
+  input: UpdateMaintenanceInput
+): Promise<MaintenanceRequestDto> {
+  const updated = await repo.updateMaintenance(id, userId, input);
+  if (!updated) throw new MaintenanceError("Maintenance request not found.");
+  return updated;
 }

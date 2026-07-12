@@ -83,3 +83,23 @@ export async function getMaintenanceById(
   });
   return row ? map(row) : null;
 }
+
+export async function updateMaintenance(
+  id: string,
+  userId: string,
+  data: { issueDescription?: string | null; photoUrl?: string | null }
+): Promise<MaintenanceRequestDto | null> {
+  const existing = await prisma.maintenanceRequest.findFirst({
+    where: { id, requestedById: userId },
+  });
+  if (!existing) return null;
+  const row = await prisma.maintenanceRequest.update({
+    where: { id },
+    data: {
+      issueDescription: data.issueDescription ?? undefined,
+      photoUrl: data.photoUrl,
+    },
+    include,
+  });
+  return map(row);
+}

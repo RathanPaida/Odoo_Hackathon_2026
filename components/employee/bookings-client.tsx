@@ -39,7 +39,7 @@ export function BookingsClient() {
       const res = await apiFetch<{ data: ResourceBookingDto[] }>(
         `/api/employee/bookings?pageSize=100`
       );
-      setBookings(res.data?.data?.data || []);
+      setBookings(res.data.data);
     } catch (e: any) {
       toast(e.message ?? "Failed to load bookings", "error");
     } finally {
