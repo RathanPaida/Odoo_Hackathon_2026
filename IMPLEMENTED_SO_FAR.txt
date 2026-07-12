@@ -1,0 +1,121 @@
+IMPLEMENTED SO FAR — AssetFlow ERP (oodoprep auth module)
+================================================================
+
+Project: Odoo_Hackathon_2026 / "oodoprep" + AssetFlow ERP RBAC layer
+Stack: Next.js 15 (App Router) · TypeScript · Prisma · SQLite (dev) · jose JWT ·
+       bcryptjs · Zod · React Hook Form · Tailwind CSS · Nodemailer/Resend
+
+------------------------------------------------------------------
+1. CORE AUTHENTICATION SYSTEM (oodoprep)
+------------------------------------------------------------------
+Secure, production-style auth built from scratch:
+
+Authentication
+  - Registration with password-strength validation (Zod)
+  - Login (bcrypt cost-12 hashing, "Remember me")
+  - Logout with server-side refresh-token revocation
+  - Email verification via link OR 6-digit OTP
+  - Resend verification
+  - Forgot password (reset link) + Reset password (single-use, expiring token)
+  - Change password (requires current password)
+  - Refresh tokens with rotation + DB revocation + family tracking
+  - Session management (device/IP tracking, active sessions)
+
+User features
+  - Profile view/update (name, avatar)
+  - Change email (re-verification required)
+  - Delete account (password-confirmed)
+  - Account status: ACTIVE / INACTIVE / SUSPENDED, last-login tracking
+
+Security
+  - HTTP-only, Secure, SameSite=Lax cookies for tokens
+  - Edge middleware route protection + silent access-token refresh
+  - Rate limiting on login/register/OTP/password endpoints (in-memory)
+  - Zod validation on all inputs
+  - No duplicate emails, no user enumeration (generic errors)
+
+Endpoints
+  POST /api/auth/register, /login, /logout, /verify-email,
+       /resend-verification, /forgot-password, /reset-password
+  GET  /api/auth/me
+  POST /api/auth/refresh
+  PATCH /api/user/profile
+  POST  /api/user/change-password, /api/user/change-email
+  DELETE /api/user/delete
+
+Pages: login, register, verify-email, forgot-password, reset-password,
+       dashboard, profile, settings, dev/mailbox
+Components: auth/* forms+shell, ui/* (toast, spinner), user/* shell+forms
+Lib: db, email, rate-limit, request, utils, auth/{jwt,session,password,guard},
+     services/{auth-service,user-service}, email/templates
+Validations: auth.ts, user.ts   Types: types/index.ts   Hook: hooks/use-api.ts
+
+Database models (prisma/schema.prisma):
+  User, Department, EmailVerification, PasswordReset, Session, RefreshToken
+  (unique/foreign-key constraints, cascades, soft-delete-ready `deletedAt`)
+
+------------------------------------------------------------------
+2. RBAC LAYER (AssetFlow ERP)
+------------------------------------------------------------------
+Extended (not rewritten) the auth module with role-based access control.
+
+Database
+  - UserRole enum: ADMIN | ASSET_MANAGER | DEPARTMENT_HEAD | EMPLOYEE (default EMPLOYEE)
+  - New Department model (id, name, code @unique, description, timestamps)
+  - User gains employeeId + departmentId (FK -> Department, onDelete: SetNull)
+  - Migration: prisma/migrations/20260712045618_init/migration.sql
+
+Roles & permissions
+  - lib/auth/roles.ts: ROLE_DASHBOARD map, SUPER_ROLES (ADMIN), role labels
+  - lib/auth/permissions.ts: 21 fine-grained PERMISSIONS + ROLE_PERMISSIONS map
+      ADMIN     : manage departments/employees, assign roles, manage categories,
+                  view reports, view dashboard, manage audit cycles
+      ASSET_MANAGER : register/allocate assets, approve transfers/maintenance/returns
+      DEPARTMENT_HEAD: view dept assets, approve dept transfers, book shared resources
+      EMPLOYEE  : view my assets, book resources, raise maintenance/transfer/return
+  - Helpers: hasPermission, hasAllPermissions, hasAnyPermission, getRolePermissions,
+             isRole, dashboardForRole, roleLabel
+
+Guards & middleware
+  - lib/auth/guard.ts: requireUser / requireRole / requirePermission (return {user,response})
+  - middleware.ts: role authorization per /dashboard/<role> (ADMIN bypass) +
+                   /dashboard -> role dashboard redirection
+
+Navigation & UI
+  - lib/auth/navigation.ts: role-filtered nav items
+  - components/user/app-shell.tsx: role badge, nav filtering, rebranded "AssetFlow"
+  - Role dashboards: app/dashboard/{admin,manager,head,employee}/page.tsx
+    + shared components/user/role-dashboard.tsx (renders granted-permission chips)
+
+User service
+  - toPublicUser exposes departmentId/employeeId
+  - assignRole(id, role) and setDepartment(id, departmentId, employeeId?)
+
+------------------------------------------------------------------
+3. ADMIN EMPLOYEE DIRECTORY (RBAC extension)
+------------------------------------------------------------------
+- validations/admin.ts: updateUserSchema (role, status, departmentId; >=1 required)
+- GET  /api/admin/users  (requireRole ADMIN): list non-deleted users,
+      search ?q= (email/first/last) + ?departmentId= filter
+- PATCH /api/admin/users/[id] (requireRole ADMIN): update role/status/department;
+      changing role revokes all active RefreshToken + Session rows (forces re-login)
+- Security review decision AGREED: token revocation on role change is implemented.
+
+------------------------------------------------------------------
+4. MAINTENANCE / DOCS
+------------------------------------------------------------------
+- README.md, RBAC_IMPLEMENTATION.md, ADMIN_EMPLOYEE_DIRECTORY.md, ANALYSIS.md,
+  TEAMMATE_SETUP.md, docker-compose.yml, .env.example, scripts/dev-mailserver.mjs
+- Scripts: dev, build, start, lint, typecheck, prisma:* , db:seed, mail:dev
+
+------------------------------------------------------------------
+KNOWN GAPS / NOT YET BUILT
+------------------------------------------------------------------
+- Employee Directory UI page: API exists but no page renders the list or
+  role/status controls yet (Admin nav links to #employees placeholder).
+- No actual ERP feature modules (assets, transfers, maintenance, resources,
+  audit cycles) beyond RBAC wiring/dashboards.
+- DB provider in code is SQLite (schema datasource), while README/docs reference
+  PostgreSQL — align before production.
+- Rate limiting is in-memory (single instance only); swap for Redis for multi-instance.
+- Soft-delete (`deletedAt`) present but currently hard-deletes with cascades.
