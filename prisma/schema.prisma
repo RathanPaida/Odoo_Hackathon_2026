@@ -7,22 +7,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  ADMIN
-  ASSET_MANAGER
-  DEPARTMENT_HEAD
-  EMPLOYEE
-}
 
-enum AccountStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
-}
 
 model User {
   id            String         @id @default(cuid())
@@ -30,8 +19,8 @@ model User {
   passwordHash  String
   firstName     String?
   lastName      String?
-  role          UserRole       @default(EMPLOYEE)
-  status        AccountStatus @default(ACTIVE)
+  role          String         @default("EMPLOYEE")
+  status        String         @default("ACTIVE")
   emailVerified Boolean        @default(false)
   avatarUrl     String?
   lastLoginAt   DateTime?
