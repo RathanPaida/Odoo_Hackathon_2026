@@ -36,7 +36,7 @@ export function MaintenanceClient() {
       const res = await apiFetch<{ data: Paginated<ManagerMaintenanceDto> }>(
         `/api/manager/maintenance?${params}`
       );
-      setData(res.data?.data?.data || []);
+      setData(res.data.data);
     } catch (e: any) {
       toast(e.message ?? "Failed to load maintenance requests", "error");
     } finally {

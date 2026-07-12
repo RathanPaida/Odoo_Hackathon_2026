@@ -30,7 +30,7 @@ export function TransfersClient() {
       const res = await apiFetch<{ data: Paginated<ManagerTransferDto> }>(
         `/api/manager/transfers?${params}`
       );
-      setData(res.data?.data?.data || []);
+      setData(res.data.data);
     } catch (e: any) {
       toast(e.message ?? "Failed to load transfers", "error");
     } finally {
