@@ -7,7 +7,7 @@
 > of the existing RBAC layer (`lib/auth/roles.ts`, `lib/auth/permissions.ts`,
 > `lib/auth/guard.ts`).
 
----
+-------------
 
 ## 1. Goal
 
@@ -16,7 +16,7 @@ Employee Directory, per the problem statement: *"Admin promotes an Employee to
 Department Head or Asset Manager here — this is the only place roles are
 assigned."*
 
----
+--------------
 
 ## 2. Security Review Decision
 
@@ -28,7 +28,7 @@ re-authenticate, so their next JWT carries the updated role. The behavior is
 identical to the existing password-reset revocation already in
 `lib/services/auth-service.ts` (`resetPassword`).
 
----
+------------
 
 ## 3. What Was Implemented
 
@@ -62,7 +62,7 @@ identical to the existing password-reset revocation already in
     rows for the user inside a `prisma.$transaction` (forces re-login).
 - **Returns:** `{ ok: true, message: "User updated.", data: { id, role, status } }`.
 
----
+--------------
 
 ## 4. Architecture Notes
 
@@ -75,7 +75,7 @@ identical to the existing password-reset revocation already in
   `departmentId`, `RefreshToken`, and `Session` (with `revokedAt`).
 - All code typechecks (`npx tsc --noEmit` → exit 0).
 
----
+-------------------
 
 ## 5. Manual Verification
 
@@ -87,7 +87,7 @@ identical to the existing password-reset revocation already in
 6. DB check: the user's `refresh_tokens.revokedAt` and `sessions.revokedAt`
    are set, so they must log in again to get a JWT with the new role.
 
----
+------------------
 
 ## 6. Not Yet Built (out of scope of this change)
 
